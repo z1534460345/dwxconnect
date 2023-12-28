@@ -1,0 +1,36 @@
+//@version=5
+indicator("突破失败和突破成功指标", overlay=true)
+
+// 获取当前时间
+time_now = time(timeframe.period)
+
+// 定义凌晨两点到三点之间和早上十点到十一点之间的时间区间
+time_start1 = timestamp(year, month, dayofmonth, 3, 1)
+time_end1 = timestamp(year, month, dayofmonth, 4, 0)
+time_start2 = timestamp(year, month, dayofmonth, 10, 1)
+time_end2 = timestamp(year, month, dayofmonth, 11, 0)
+
+// 判断是否在时间区间内
+in_time = (time_now >= time_start1 and time_now <= time_end1) or (time_now >= time_start2 and time_now <= time_end2)
+
+// 获取上一根、上上根和当前K线的最高价、最低价和收盘价
+high_prev = high[1]
+high_prev2 = high[2]
+low_prev = low[1]
+low_prev2 = low[2]
+close_prev = close[1]
+open_prev = open[1]
+
+// 判断是否满足突破失败的条件
+break_fail = high_prev > high_prev2 and close_prev < high_prev2 and ((open_prev<close_prev and high_prev-close_prev > open_prev-low_prev) or (open_prev>close_prev and high_prev-open_prev > close_prev-low_prev))
+
+// 判断是否满足跌破失败的条件
+break_success = low_prev < low_prev2 and close_prev > low_prev2 and ((open_prev<close_prev and open_prev-low_prev > high_prev-close_prev) or (open_prev>close_prev and close_prev-low_prev > high_prev-open_prev))
+
+// 如果在时间区间内且满足突破失败的条件，就在K线上方画出向下箭头
+if in_time and break_fail
+    label.new(bar_index-1, high_prev2, "↓", style=label.style_label_down, color=color.red, size=size.tiny)
+
+// 如果在时间区间内且满足跌破失败的条件，就在K线上方画出向上箭头
+if in_time and break_success
+    label.new(bar_index-1, low_prev2, "↑", style=label.style_label_up, color=color.green, size=size.tiny)
